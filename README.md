@@ -31,7 +31,7 @@ All documents conform to a simplified `LisIn` schema. Here's a common layout:
 
 ```xml
 <Order>
-  <OrderID>...<OrderID>
+  <OrderID>...</OrderID>
   <Sender>
     <Name>Christian Carstensen Logistics</Name>
     <GLN>...</GLN>
@@ -57,16 +57,21 @@ Each variant (`OL`, `OA`, `EJ`) contains additional fields, depending on logisti
 
 Incoming and outgoing statuses (based on LIS/EDIFACT logic) reflect shipment stages:
 
-| Code | Status (DE)                         | Status (EN)                     | Status (DA)              |
-| ---- | ----------------------------------- | ------------------------------- | ------------------------ |
-| 1    | Übergabe an externen Dienstleister  | Handed over to external partner | Overgivet til tredjepart |
-| 2    | Hub Ausgang Scan                    | Hub outbound scan               | Transit - Lagerudgang    |
-| 3    | Beschädigung bei Ausgang            | Damage at departure             | Skadet ved transit       |
-| 4    | Geleifert in LEMAN Trailer          | Delivered into LEMAN trailer    | Leveret i LEMAN trailer  |
-| 5    | Externer Dienstleister außerhalb DD | External linehaul               | Ekstern linehaul         |
-| ...  | ...                                 | ...                             | ...                      |
+| Code | Status (DE)                             | Status (EN)                     | Status (DA)                 |
+| ---- | --------------------------------------- | ------------------------------- | --------------------------- |
+| 1    | Übergabe an externen Dienstleister      | Handed over to external partner | Overgivet til tredjepart    |
+| 2    | Hub Ausgang Scan                        | Hub outbound scan               | Transit - Lagerudgang       |
+| 3    | Beschädigung bei Ausgang                | Damage at departure             | Skadet ved transit          |
+| 4    | Geleifert in LEMAN Trailer              | Delivered into LEMAN trailer    | Leveret i LEMAN trailer     |
+| 5    | Externer Dienstleister außerhalb DD     | External linehaul               | Ekstern linehaul            |
+| 6    | Quittung auf Originalbeleg erforderlich | Original receipt required       | Originalkvittering påkrævet |
+| 7    | Frachtbrief bereitgestellt              | Freight bill provided           | Fragtbrev klarmeldt         |
+| 8    | Frachtbrief aktualisiert                | Freight bill updated            | Fragtbrev opdateret         |
+| 9    | OMEX storniert                          | OMEX cancelled                  | Omex annulleret             |
+| 10   | OMEX korrigiert                         | OMEX corrected                  | Omex rettet                 |
+| ...  | ...                                     | ...                             | ...                         |
 
-✅ Full list: see `Status_Codes.md`
+✅ Full list provided in `Status_Codes.md`
 
 ---
 
@@ -91,7 +96,7 @@ Incoming and outgoing statuses (based on LIS/EDIFACT logic) reflect shipment sta
 
 ## 📬 Contact
 
-**Author:** Alex Weiss – [LinkedIn](https://www.linkedin.com/in/alexweiss)
+**Author:** Alex Weiss – [LinkedIn](https://www.linkedin.com/in/alex-weiss-a6483417b)
 
 You can use this structure to build your own **LisIn-based logistics bridge** between any two carriers or partners.
 
