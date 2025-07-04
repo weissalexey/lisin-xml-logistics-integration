@@ -9,20 +9,51 @@ This project demonstrates a **production-ready data exchange system** based on t
 * [Christian Carstensen Logistics](https://www.carstensen.eu)
 * [Dansk Distribution](https://www.danskdistribution.dk)
 
-The system automates:
+### 🧪 Implementation Highlights
 
-* Transport order transfer (OL – Distribution)
-* Purchase order interface (OA – Beschaffung)
-* Sub-segment transport instructions (EJ – Teilstrecke)
-* Live status sharing with 90+ codes (Status XML)
+This solution was developed in a **hybrid architecture**:
+
+* The **outbound interface** was implemented fully in Python from the start.
+* Initially, the **inbound integration** was scoped and developed with **WinSped-Konverter 2.7**, as per project specification. However, during development, it became evident that certain business rules and transformations were not feasible within the limitations of that tool. As a result, the inbound pipeline was rapidly reimplemented in Python to meet deadline and technical requirements.
+* The **status intake** (receiving lifecycle events from the partner) was built on Python immediately to enable easy monitoring, extensibility, and automation.
+* The **status export** (feedback from our side to the partner) is currently implemented in **VBS (Visual Basic Script)** for quick iteration and simplicity of business logic insertion. Once all dynamic logic is finalized, this portion will also be migrated to Python.
+
+### 🔢 Track & Trace Number Generation
+
+Unique T\&T numbers are created using a file-based counter:
+
+```python
+if len(TrackandTraceEmail) == 0:
+    FBNR1 = str(FBNR_DEF())
+    FBNR = '64500000'[:-len(FBNR1)] + FBNR1
+```
+
+And the counter logic:
+
+```python
+def FBNR_DEF():
+    COUNT_FILE = os.path.join('//srv-wss/Schnittstellen/DansckDistribution/FBNR.COUNTER')
+    if not os.path.exists(COUNT_FILE):
+        num = 0
+    else:
+        f = open(COUNT_FILE, 'r')
+        num = int(f.read())
+        f.close()
+    FBB = str(num)
+    num += 1
+    f = open(COUNT_FILE, 'w')
+    f.write(str(num))
+    f.close()
+    return FBB
+```
 
 ---
 
 ## 📦 Project Files
 
-* `OL_Distribution.xml` – Transport Order (OL)
-* `OA_Beschaffung.xml` – Purchase Order (OA)
-* `EJ_Teilstrecke.xml` – Sub-Segment Orders (EJ)
+* `_OL.xml` – Transport Order (OL)
+* `_OA.xml` – Purchase Order (OA)
+* `_EJ.xml` – Sub-Segment Orders (EJ)
 * `Status_Codes.xml` – Status Messages in 3 languages
 
 ---
