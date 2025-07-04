@@ -1,64 +1,76 @@
-# XML-basierte Logistik-Integration zwischen Christian Carstensen Logistics & Dansk Distribution
+# XML-basierte Logistikintegration zwischen Christian Carstensen Logistics & Dansk Distribution
 
-> 🇬🇧 [English](README.en.md) | 🇩🇪 [Deutsch](README.de.md) | 🇹🇼 [Dansk](README.da.md)
+> 🇬🇧 [English](README.en.md) | 🇩🇪 Deutsch | 🇩🇰 [Dansk](README.da.md)
 
-## 🌎 Überblick
+## 🌍 Übersicht
 
-Dieses Projekt zeigt ein **produktives Datenaustauschsystem** auf Basis des **LisIn XML-Formats** zwischen zwei Logistikunternehmen:
+Dieses Projekt demonstriert ein **produktionsreifes Datenaustauschsystem** auf Basis des **LisIn-XML-Formats** zwischen zwei Logistikunternehmen:
 
 * [Christian Carstensen Logistics](https://www.carstensen.eu)
 * [Dansk Distribution](https://www.danskdistribution.dk)
 
-Das System automatisiert:
+### 🧪 Implementierungs-Highlights
 
-* Transportauftragsübertragung (OL – Distribution)
-* Beschaffungsauftragsschnittstelle (OA – Beschaffung)
-* Teilstrecken-Anweisungen (EJ – Teilstrecke)
-* Live-Statusübermittlung (90+ standardisierte Statuscodes)
+Diese Lösung wurde in einer **hybriden Architektur** entwickelt:
 
----
+* Die **ausgehende Schnittstelle** wurde von Anfang an vollständig in Python implementiert.
+* Die **eingehende Integration** wurde zunächst gemäß Projektspezifikation mit dem **WinSped-Konverter 2.7** konzipiert und entwickelt. Während der Umsetzung stellte sich jedoch heraus, dass bestimmte Geschäftsregeln und Transformationen mit diesem Tool nicht abbildbar waren. Daher wurde die Eingangsverarbeitung schnell auf Python umgestellt, um Termine und technische Anforderungen einzuhalten.
+* Die **Statusverarbeitung (Eingang)** wurde direkt in Python umgesetzt, um Monitoring, Erweiterbarkeit und Automatisierung zu erleichtern.
+* Die **Statusrückmeldung (Ausgang)** ist derzeit in **VBS (Visual Basic Script)** realisiert, um schnelles Prototyping und einfache Geschäftslogik zu ermöglichen. Sobald alle dynamischen Regeln finalisiert sind, erfolgt die Migration nach Python.
+
+### 🔢 Track & Trace Nummerngenerierung
+
+Eindeutige T&T-Nummern werden über einen dateibasierten Zähler erzeugt:
+```python
+if len(TrackandTraceEmail) == 0:
+    FBNR1 = str(FBNR_DEF())
+    FBNR = '64500000'[:-len(FBNR1)] + FBNR1
+```
+
+Und die Zähler-Logik:
+```python
+def FBNR_DEF():
+    COUNT_FILE = os.path.join('//srv-wss/Schnittstellen/DansckDistribution/FBNR.COUNTER')
+    if not os.path.exists(COUNT_FILE):
+        num = 0
+    else:
+        f = open(COUNT_FILE, 'r')
+        num = int(f.read())
+        f.close()
+    FBB = str(num)
+    num += 1
+    f = open(COUNT_FILE, 'w')
+    f.write(str(num))
+    f.close()
+    return FBB
+```
 
 ## 📦 Projektdateien
 
-* `OL_Distribution.xml` – Transportauftrag
-* `OA_Beschaffung.xml` – Beschaffungsauftrag
-* `EJ_Teilstrecke.xml` – Teilstreckenanweisungen
-* `Status_Codes.xml` – Versandstatus in 3 Sprachen
-* `Status_Codes.md` – 90+ mehrsprachige Statusbeschreibungen
+* `*_OL.xml` – Transportauftrag (OL)
+* `*_OA.xml` – Beschaffungsauftrag (OA)
+* `*_EJ.xml` – Teilstreckenauftrag (EJ)
+* `Status_Codes.xml` – Statusmeldungen in 3 Sprachen
 
----
+## 🧠 XML-Nachrichtenstrukturen
 
-## 🧠 XML-Struktur (basierend auf LisIn)
-
-Alle Nachrichten folgen einem standardisierten LisIn XML-Schema:
-
+### 1. `OL_Distribution.xml` – Transportauftrag
 ```xml
 <Order>
-  <OrderID>123456</OrderID>
-  <Sender>
-    <Name>Christian Carstensen Logistics</Name>
-    <GLN>9876543210001</GLN>
-  </Sender>
-  <Receiver>
-    <Name>Dansk Distribution</Name>
-    <GLN>1234567890001</GLN>
-  </Receiver>
-  <Positions>
-    <Position>
-      <GoodsDescription>Paletten</GoodsDescription>
-      <Amount>12</Amount>
-    </Position>
-  </Positions>
+  <OrderID>OL20250704-001</OrderID>
+  ...
 </Order>
 ```
 
-Varianten (OL, OA, EJ) enthalten geschäftsspezifische Felder.
+### 2. `OA_Beschaffung.xml` – Beschaffungsauftrag
+
+* `Buyer`, `Supplier`, `OrderLines`, Lieferplan
+
+### 3. `EJ_Teilstrecke.xml` – Teilstrecke
 
 ---
 
-## 📨 Status\_Codes.xml – Nachrichtenerklärung
-
-Das Statusfile dokumentiert Transportereignisse als Code:
+## 📨 Status_Codes.xml – Beschreibung
 
 ```xml
 <StatusReport>
@@ -71,14 +83,10 @@ Das Statusfile dokumentiert Transportereignisse als Code:
 </StatusReport>
 ```
 
-Die Codes sind mit realen Ereignissen verknüpft und branchenweit übertragbar.
-
----
-
-## 📊 Statuscode-Tabelle
+## 📊 Status-Codes-Tabelle
 
 | Code | DE                                      | EN                              | DA                          |
-| ---- | --------------------------------------- | ------------------------------- | --------------------------- |
+|------|-----------------------------------------|----------------------------------|-----------------------------|
 | 1    | Übergabe an externen Dienstleister      | Handed over to external partner | Overgivet til tredjepart    |
 | 2    | Hub Ausgang Scan                        | Hub outbound scan               | Transit - Lagerudgang       |
 | 3    | Beschädigung bei Ausgang                | Damage at departure             | Skadet ved transit          |
@@ -89,34 +97,21 @@ Die Codes sind mit realen Ereignissen verknüpft und branchenweit übertragbar.
 | 8    | Frachtbrief aktualisiert                | Freight bill updated            | Fragtbrev opdateret         |
 | 9    | OMEX storniert                          | OMEX cancelled                  | Omex annulleret             |
 | 10   | OMEX korrigiert                         | OMEX corrected                  | Omex rettet                 |
-| ...  | ...                                     | ...                             | ...                         |
 
-📅 Vollständige Liste siehe [`Status_Codes.md`](./Status_Codes.md)
+📄 Vollständige Liste in [`Status_Codes.md`](./Status_Codes.md)
 
----
+## 🎯 Geschäftlicher Anwendungsfall
 
-## 🚀 Business-Use-Case
+* **Automatische Schnittstelle**
+* **Echtzeitsynchronisierung**
+* **Lesbare Logs**
 
-* **ERP Push**: Aufträge werden automatisch als XML gesendet
-* **Webhook-Sync**: Statusmeldungen in Echtzeit
-* **Lesbare Logs**: Für Disposition und Verwaltung
+## 🔍 SEO-Optimierung
 
----
+**Keywords**: XML Logistik-Schnittstelle, Freight API, LisIn, ERP-Anbindung, OCR + XML/JSON
 
-## 🔍 SEO-Schlüsselwörter
+## 📬 Kontakt
 
-* XML Logistik-Schnittstelle, LisIn Standard, API Integration
-* Frachtdaten Automatisierung, digitale Lieferkette
-* Christian Carstensen Logistics, Dansk Distribution
-
----
-
-## 📩 Kontakt
-
-**Autor:** Alex Weiss – [LinkedIn Profil](https://www.linkedin.com/in/alex-weiss-a6483417b)
+**Autor:** Alex Weiss – [LinkedIn](https://www.linkedin.com/in/alex-weiss-a6483417b)
 
 > „Ich baue smarte Brücken zwischen Logistik, Daten und Menschen.“
-
----
-
-*Dieses Repository ist Teil meines professionellen Portfolios. Firmennamen dienen der technischen Veranschaulichung.*
