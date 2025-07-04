@@ -1,6 +1,6 @@
-> 🇬🇧 [English](README.en.md) | 🇩🇪 [Deutsch](README.de.md) | 🇩🇰 [Dansk](README.da.md)
-
 # XML-based Logistics Integration Between Christian Carstensen Logistics & Dansk Distribution
+
+> 🇬🇧 [English](README.en.md) | 🇩🇪 [Deutsch](README.de.md) | 🇩🇰 [Dansk](README.da.md)
 
 ## 🌍 Overview
 
@@ -14,7 +14,7 @@ The system automates:
 * Transport order transfer (OL – Distribution)
 * Purchase order interface (OA – Beschaffung)
 * Sub-segment transport instructions (EJ – Teilstrecke)
-* Live status sharing with 90+ codes
+* Live status sharing with 90+ codes (Status XML)
 
 ---
 
@@ -27,44 +27,86 @@ The system automates:
 
 ---
 
-## 🧠 Structure: XML Files (LisIn-Based)
+## 🧠 XML Message Structures
 
-All documents conform to a simplified `LisIn` schema. Here's a common layout:
+### 1. OL\_Distribution.xml – Transport Order
+
+This message contains shipment-level instructions:
 
 ```xml
 <Order>
-  <OrderID>...</OrderID>
+  <OrderID>OL20250704-001</OrderID>
   <Sender>
     <Name>Christian Carstensen Logistics</Name>
-    <GLN>...</GLN>
+    <GLN>1234567890123</GLN>
   </Sender>
   <Receiver>
     <Name>Dansk Distribution</Name>
-    <GLN>...</GLN>
+    <GLN>9876543210987</GLN>
   </Receiver>
+  <Delivery>
+    <Date>2025-07-05</Date>
+    <Address>
+      <Street>Transportvej 12</Street>
+      <PostalCode>4000</PostalCode>
+      <City>Roskilde</City>
+      <Country>DK</Country>
+    </Address>
+  </Delivery>
   <Positions>
     <Position>
-      <GoodsDescription>Pallets</GoodsDescription>
-      <Amount>12</Amount>
+      <ItemCode>PALLET_001</ItemCode>
+      <Description>Europallets with goods</Description>
+      <Quantity>12</Quantity>
+      <Weight>960</Weight>
     </Position>
   </Positions>
 </Order>
 ```
 
-Each variant (`OL`, `OA`, `EJ`) contains additional fields, depending on logistics step.
+### 2. OA\_Beschaffung.xml – Purchase Order
+
+Describes planned purchases from supplier networks. It includes:
+
+* `Buyer`
+* `Supplier`
+* `OrderLines`
+* Delivery schedule
+
+### 3. EJ\_Teilstrecke.xml – Sub-segment
+
+Used for linking long-haul with last-mile partners.
 
 ---
 
-## 📊 Status Codes
+## 📨 Status\_Codes.xml – Message Description
 
-Incoming and outgoing statuses (based on LIS/EDIFACT logic) reflect shipment stages:
+The status file uses compact entries for tracking transport lifecycle:
 
-| Code | Status (DE)                             | Status (EN)                     | Status (DA)                 |
+```xml
+<StatusReport>
+  <Status>
+    <Code>6004</Code>
+    <TextDE>Geleifert in LEMAN Trailer</TextDE>
+    <TextEN>Delivered in LEMAN Trailer</TextEN>
+    <TextDA>Leveret i Leman trailer</TextDA>
+  </Status>
+  <!-- +90 entries -->
+</StatusReport>
+```
+
+The `Code` corresponds to real-world events, many of which are harmonized across freight networks.
+
+---
+
+## 📊 Status Codes Table
+
+| Code | DE                                      | EN                              | DA                          |
 | ---- | --------------------------------------- | ------------------------------- | --------------------------- |
 | 1    | Übergabe an externen Dienstleister      | Handed over to external partner | Overgivet til tredjepart    |
 | 2    | Hub Ausgang Scan                        | Hub outbound scan               | Transit - Lagerudgang       |
 | 3    | Beschädigung bei Ausgang                | Damage at departure             | Skadet ved transit          |
-| 4    | Geleifert in LEMAN Trailer              | Delivered into LEMAN trailer    | Leveret i LEMAN trailer     |
+| 4    | Geleifert in LEMAN Trailer              | Delivered in LEMAN trailer      | Leveret i LEMAN trailer     |
 | 5    | Externer Dienstleister außerhalb DD     | External linehaul               | Ekstern linehaul            |
 | 6    | Quittung auf Originalbeleg erforderlich | Original receipt required       | Originalkvittering påkrævet |
 | 7    | Frachtbrief bereitgestellt              | Freight bill provided           | Fragtbrev klarmeldt         |
@@ -73,7 +115,7 @@ Incoming and outgoing statuses (based on LIS/EDIFACT logic) reflect shipment sta
 | 10   | OMEX korrigiert                         | OMEX corrected                  | Omex rettet                 |
 | ...  | ...                                     | ...                             | ...                         |
 
-✅ Full list provided in `Status_Codes.md`
+📄 Full list in [`Status_Codes.md`](./Status_Codes.md)
 
 ---
 
